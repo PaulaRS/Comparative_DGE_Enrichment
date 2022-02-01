@@ -1,0 +1,174 @@
+---
+title: "Differential gene expression analysis"
+author: "Mari-Lee Odendaal"
+date: "`r Sys.time()`"
+params: 
+      subdir_name: differential_gene_expression
+---
+
+## Load R-packages
+
+```{r message=F}
+library(tximport);library(DESeq2);library(csaw);library(pheatmap);library(tidyverse);library(tidyverse);library(here);library(glue);library(DEFormats);library(colorspace)
+```
+
+```{r setup, include=F, message=F}
+subdir_name <- params$subdir_name
+
+# set paths
+knitr::opts_knit$set(root.dir=".", aliases=c(h = "fig.height", w = "fig.width", ow = "out.width"))
+knitr::opts_chunk$set(dev=c('png', 'pdf'), 
+                      fig.path=here("results", "figures", glue("{subdir_name}/")),
+                      dpi=300)
+```
+
+```{r knit, echo=F, eval=FALSE}
+rmarkdown::render(input = here("scripts", str_c(subdir_name, ".Rmd")), output_dir = here("results"))
+```
+
+## Input files
+
+```{r message=F}
+dir = here::here("input", "adult")
+samples <- read.table(file.path(dir, "samplesheet.txt"), header = TRUE)
+files <- file.path(dir, "Salmon", samples$File)
+names(files) <- paste0("D", 7:12, ".tabular")
+tx2gene <- read.table(file.path(dir, "gene_trans_map")) %>% .[,c(2,1)]
+txi <- tximport(files, type = "salmon", tx2gene = tx2gene)
+sample_tb <- data.frame(condition = factor(samples$Condition))
+rownames(sample_tb) <- colnames(txi$counts)
+dds <- DESeqDataSetFromTximport(txi, sample_tb, ~condition)
+```
+
+Salmon files are imported to summarize the abundances, counts, and transcript lengths to gene-level.
+
+## Filter lowly expressed genes
+
+```{r}
+keep <- rowSums(cpm(dds)>=0.5) >= 2
+dds <- dds[keep,]
+```
+
+Genes with an expression lower than 0.5 counts per million in at least 2 of the samples are removed from the data.
+
+## Differential gene expression analysis with DESeq
+
+```{r message=F}
+dds <- DESeq(dds)
+```
+
+```{r}
+res_pvsp <- results(dds, contrast=c("condition","Present","Past"), pAdjustMethod = "BH", alpha = 0.05, lfcThreshold = 0.5)
+```
+
+The differential gene expression analysis is performed for the comparison present vs past using a log2 fold change threshold of 0.5.
+
+```{r}
+res_fvsp <- results(dds, contrast=c("condition","Future","Present"), pAdjustMethod = "BH", alpha = 0.05, lfcThreshold = 0.5)
+```
+
+The differential gene expression analysis is performed for the comparison future vs present using a log2 fold change threshold of 0.5.
+
+## Pre-processing for visualization of the DE genes
+
+```{r}
+res_pvsp$padj[is.na(res_pvsp$padj)] <- 1
+keep <- res_pvsp$padj < 0.05
+res_pvsp_sig <- res_pvsp[keep,] %>% as.data.frame()
+res_pvsp_sig$gene <- rownames(res_pvsp_sig)
+
+res_fvsp$padj[is.na(res_fvsp$padj)] <- 1
+keep <- res_fvsp$padj < 0.05
+res_fvsp_sig <- res_fvsp[keep,] %>% as.data.frame()
+res_fvsp_sig$gene <- rownames(res_fvsp_sig)
+
+res_all <- merge(res_pvsp_sig, res_fvsp_sig, by = "gene", all = T)
+```
+
+## Filter genes with extreme within group variation
+
+```{r message=F}
+df <- rownames_to_column(as.data.frame(counts(dds)), var = "gene") %>% as_tibble() %>% pivot_longer(c(2:7), names_to = "condition") %>% mutate(condition = ifelse(condition == samples$File, samples$Condition, NA)) %>% group_by(gene, condition) %>% summarise(diff = max(value)-min(value), fold = max(value)/min(value))
+
+genes_rm <- unique(df[(df$diff > 300) & df$fold > 20,]$gene)
+dds <- dds[!rownames(as.data.frame(cpm(dds))) %in% genes_rm,] 
+```
+
+Genes with a high variation within groups are removed from the data.
+
+```{r}
+saveRDS(cpm(dds), file = "cpm_adults.RDS")
+```
+
+The filtered dataset is normalized by implementing counts per million, this is used for the correlation analysis
+
+## Visualization of the DE genes
+
+```{r}
+y = as.DGEList(dds)
+se <- SummarizedExperiment(assays = list(counts = y$counts, offset = y$offset))
+se$totals <- y$samples$lib.size
+cpms <- calculateCPM(se, use.offsets = TRUE, log = T)
+```
+
+The filtered data is normalized by implementing counts per million taking into account the offset and library size.
+
+```{r}
+cpms_sig <- subset(cpms, rownames(cpms) %in% res_all$gene)
+colnames(cpms_sig) <- c("Future S1","Future S2","Past S1","Past S2","Present S1","Present S2")
+cpms_sig2 <- t(scale(t(cpms_sig)))
+cpms_sig2 <- cpms_sig2[,c(3,4,5,6,1,2)]
+```
+
+Rows are scaled for visualization
+
+```{r}
+col <- rev(diverging_hcl(15, "Red-Green"))
+```
+
+```{r heatmap, ow = '90%', h = 6, w = 5}
+hm_all <- pheatmap(cpms_sig2, col=col, show_rownames = T, cluster_cols = F,cellwidth = 18, cellheight = 9)
+```
+
+## Pre-processing for GO MWU analysis
+
+```{r}
+res_pvsp2 = subset(res_pvsp, select = c(log2FoldChange,pvalue)) %>% as.data.frame()
+res_pvsp2 <- res_pvsp2[!rownames(res_pvsp2) %in% genes_rm,] 
+
+res_pvsp2 <- res_pvsp2 %>% mutate(
+  direction = sqrt(log2FoldChange*log2FoldChange)/log2FoldChange*-1,
+  direction = ifelse(is.na(direction), 0, direction),
+  gene = rownames(.),
+  logp = log(pvalue,10)*direction) %>%
+  subset(., select = c(gene, logp))
+```
+
+```{r}
+res_fvsp2 = subset(res_fvsp, select = c(log2FoldChange,pvalue)) %>% as.data.frame()
+res_fvsp2 <- res_fvsp2[!rownames(res_fvsp2) %in% genes_rm,] 
+
+res_fvsp2 <- res_fvsp2 %>% mutate(
+  direction = sqrt(log2FoldChange*log2FoldChange)/log2FoldChange*-1,
+  direction = ifelse(is.na(direction), 0, direction),
+  gene = rownames(.),
+  logp = log(pvalue,10)*direction) %>%
+  subset(., select = c(gene, logp))
+```
+
+```{r}
+write.table(res_pvsp2, file = "pvsp_adult.csv", append = FALSE, sep = ",", dec = ".", row.names = F, col.names = T)
+
+write.table(res_fvsp2, file = "fvsp_adult.csv", append = FALSE, sep = ",", dec = ".", row.names = F, col.names = T)
+```
+
+All the genes with their log transformed P-value are used in the GO-MWU analysis (https://github.com/z0on/GO_MWU). 
+
+*The same script was implemented for the juveniles
+
+## Session information
+
+```{r}
+sessionInfo()
+```
+

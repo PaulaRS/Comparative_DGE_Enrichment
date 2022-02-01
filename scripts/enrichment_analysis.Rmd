@@ -1,0 +1,159 @@
+---
+title: "GO enrichment analysis"
+author: "Mari-Lee Odendaal"
+date: "`r Sys.time()`"
+params: 
+      subdir_name: enrichment_analysis
+---
+
+## Load R-packages
+
+```{r message=F}
+library(pheatmap);library(tidyverse);library(tidyverse);library(here);library(glue)
+```
+
+```{r setup, include=F, message=F}
+subdir_name <- params$subdir_name
+
+# set paths
+knitr::opts_knit$set(root.dir=".", aliases=c(h = "fig.height", w = "fig.width", ow = "out.width"))
+knitr::opts_chunk$set(dev=c('png', 'pdf'), 
+                      fig.path=here("results", "figures", glue("{subdir_name}/")),
+                      dpi=300)
+```
+
+```{r knit, echo=F, eval=FALSE}
+rmarkdown::render(input = here("scripts", str_c(subdir_name, ".Rmd")), output_dir = here("results"))
+```
+
+## Input files
+
+```{r}
+fvsp_MF_adult <- readRDS("fvsp_MF_adult.RDS")
+fvsp_MF_juvenile <- readRDS("fvsp_MF_juvenile.RDS")
+fvsp_BP_adult <- readRDS("fvsp_BP_adult.RDS")
+fvsp_BP_juvenile <- readRDS("fvsp_BP_juvenile.RDS")
+pvsp_MF_adult <- readRDS("pvsp_MF_adult.RDS")
+pvsp_MF_juvenile <- readRDS("pvsp_MF_juvenile.RDS")
+pvsp_BP_adult <- readRDS("pvsp_BP_adult.RDS")
+pvsp_BP_juvenile <- readRDS("pvsp_BP_juvenile.RDS")
+```
+
+Enriched GO terms associated with molecular function and biological process are determined by the GO MWU analysis (https://github.com/z0on/GO_MWU). The analysis is performed for each of the two comparisons in adult and juvenile.
+
+```{r}
+dir = here::here("input")
+MF_ann <- read.table(file.path(dir, "GO_annotation_MF.txt"), sep = "\t", header = T)
+BP_ann <- read.table(file.path(dir, "GO_annotation_BP.txt"), sep = "\t", header = T)
+```
+
+Import the grouping information
+
+## Pre-processing for visualization of the enriched GO terms
+
+```{r}
+fvsp_MF_adult <- fvsp_MF_adult %>% mutate(group = "fvsp_MF_adult",
+                                                GO = rownames(.))
+fvsp_MF_juvenile <- fvsp_MF_juvenile %>% mutate(group = "fvsp_MF_juvenile",
+                                                GO = rownames(.))
+fvsp_BP_adult <- fvsp_BP_adult %>% mutate(group = "fvsp_BP_adult",
+                                                GO = rownames(.))
+fvsp_BP_juvenile <- fvsp_BP_juvenile %>% mutate(group = "fvsp_BP_juvenile",
+                                                GO = rownames(.))
+pvsp_MF_adult <- pvsp_MF_adult %>% mutate(group = "pvsp_MF_adult",
+                                                GO = rownames(.))
+pvsp_MF_juvenile <- pvsp_MF_juvenile %>% mutate(group = "pvsp_MF_juvenile",
+                                                GO = rownames(.))
+pvsp_BP_adult <- pvsp_BP_adult %>% mutate(group = "pvsp_BP_adult",
+                                                GO = rownames(.))
+pvsp_BP_juvenile <- pvsp_BP_juvenile %>% mutate(group = "pvsp_BP_juvenile",
+                                                GO = rownames(.))
+```
+
+```{r}
+df_MF <- rbind(pvsp_MF_adult, fvsp_MF_adult, pvsp_MF_juvenile, fvsp_MF_juvenile)
+df_BP <- rbind(pvsp_BP_adult, fvsp_BP_adult, pvsp_BP_juvenile, fvsp_BP_juvenile)
+
+df_BP <- df_BP[df_BP$pval < 0.05,]
+df_MF <- df_MF[df_MF$pval < 0.05,]
+```
+
+GO terms that have a P-value of less than 0.05 are removed from the data.
+
+```{r}
+df_BP$GO <- sub(".*? ", "", df_BP$GO)
+df_MF$GO <- sub(".*? ", "", df_MF$GO)
+
+df_MF <- df_MF %>% mutate(direction = ifelse(direction == 0, -1, direction),
+                          pval = pval*direction)
+df_BP <- df_BP %>% mutate(direction = ifelse(direction == 0, -1, direction),
+                          pval = pval*direction)
+```
+
+```{r}
+df_BP2 <- subset(df_BP, select = c(GO, group, pval)) %>% pivot_wider(names_from = group, values_from = pval) %>% as.data.frame()
+rownames(df_BP2) <- df_BP2$GO
+df_BP2 <- df_BP2[2:5]
+df_BP2[is.na(df_BP2)] <- 0
+
+keep <- rowSums(df_BP2 != 0) >= 2
+df_BP2 <- df_BP2[keep,]
+rownames(df_BP2) <- ifelse(rownames(df_BP2) %in% BP_ann$GO, BP_ann$GO2, NA)
+```
+
+Create the data frame of GO terms that are associated with biological process.
+
+```{r}
+df_MF2 <- subset(df_MF, select = c(GO, group, pval)) %>% pivot_wider(names_from = group, values_from = pval) %>% as.data.frame()
+rownames(df_MF2) <- df_MF2$GO
+df_MF2 <- df_MF2[2:5]
+df_MF2[is.na(df_MF2)] <- 0
+
+keep <- rowSums(df_MF2 != 0) >= 2
+df_MF2 <- df_MF2[keep,]
+rownames(df_MF2) <- ifelse(rownames(df_MF2) %in% MF_ann$GO, MF_ann$GO2, NA)
+```
+
+Create the data frame of GO terms that are associated with molecular function.
+
+GO terms that are significantly enriched in at least 2 of the comparisons are kept in the data for visualization.
+
+## Visualization of the enriched GO terms
+
+```{r}
+col <- c("#B6D7E8", "#4E9AC6", "#195696","#F7F7F7", "#9C1127", "#DA6954", "#F9C3A9")
+breaks = c(-0.05, -0.01, -0.001, -1e-20, 1e-20, 0.001, 0.01, 0.05)
+ann_col_MF <- c("#CAB2D6", "#6A3D9A", "#FB9A99", "#E31A1C")
+ann_col_BP <- c("#1F78B4", "#A6CEE3", "#33A02C", "#B2DF8A", "#FFFF99")
+
+ann_col <- list(MF = ann_col_MF,
+                BP = ann_col_BP)
+names(ann_col$MF) <- unique(MF_ann$MF)
+names(ann_col$BP) <- unique(BP_ann$BP)
+MF <- MF_ann
+rownames(MF) <- MF_ann$GO2
+MF <- subset(MF, select = MF)
+
+BP <- BP_ann
+rownames(BP) <- BP_ann$GO2
+BP <- subset(BP, select = BP)
+```
+
+Set the colors and breaks for the heatmap and the group annotation.
+
+```{r GO_MF, ow = '90%', h = 4, w = 11}
+hm_MF <- pheatmap(df_MF2, col=col, show_rownames = T, cluster_cols = F,
+breaks = breaks, cluster_rows = T, cellwidth = 20, cellheight = 12, annotation_row = MF, annotation_colors = ann_col, legend = F)
+```
+
+```{r GO_BP, ow = '90%', h = 4, w = 11}
+hm_BP <- pheatmap(df_BP2, col=col, show_rownames = T, cluster_cols = F,
+breaks = breaks, cluster_rows = T, cellwidth = 20, cellheight = 12, annotation_row = BP, annotation_colors = ann_col, legend = F)
+```
+
+## Session information
+
+```{r}
+sessionInfo()
+```
+

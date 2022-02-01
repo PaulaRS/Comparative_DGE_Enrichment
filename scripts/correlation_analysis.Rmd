@@ -1,0 +1,277 @@
+---
+title: "Correlation Analysis"
+author: "Mari-Lee Odendaal"
+date: "`r Sys.time()`"
+params: 
+      subdir_name: correlation_analysis
+---
+
+## Load R-packages
+
+```{r}
+library(here);library(glue);library(colorspace);library(pheatmap);library(stringr)
+```
+
+```{r setup, include=F, message=F}
+subdir_name <- params$subdir_name
+
+# set paths
+knitr::opts_knit$set(root.dir=".", aliases=c(h = "fig.height", w = "fig.width", ow = "out.width"))
+knitr::opts_chunk$set(dev=c('png', 'pdf'), 
+                      fig.path=here("results", "figures", glue("{subdir_name}/")),
+                      dpi=300)
+```
+
+```{r knit, echo=F, eval=FALSE}
+rmarkdown::render(input = here("scripts", str_c(subdir_name, ".Rmd")), output_dir = here("results"))
+```
+
+## Input R-objects
+
+```{r}
+cpm_adults <- readRDS("cpm_adults.RDS")
+cpm_juveniles <- readRDS("cpm_juveniles.RDS")
+```
+
+## Pre-processing for the correlation analyses
+
+```{r}
+colnames(cpm_adults) <- c("Future S1","Future S2","Past S1","Past S2","Present S1","Present S2")
+cpm_adults <- cpm_adults[,c(3,4,5,6,1,2)]
+m_ad <- data.matrix(cpm_adults)
+```
+
+Create a data matrix for the adults.
+
+```{r}
+colnames(cpm_juveniles) <- c("Future S1","Future S2","Past S1","Past S2","Present S1","Present S2")
+cpm_juveniles<- cpm_juveniles[,c(3,4,5,6,1,2)]
+m_juv <- data.matrix(cpm_juveniles)
+```
+
+Create a data matrix for the juveniles.
+
+```{r}
+ri_0_1_2 <- c(0,0,1,1,2,2)
+ri_0_1_0 <- c(0,0,1,1,0,0)
+ri_1_0_0 <- c(1,1,0,0,0,0)
+ri_0_0_1 <- c(0,0,0,0,1,1)
+```
+
+Make variables for the four different expression patterns.
+
+```{r}
+paletteLength <- 15
+col <- diverging_hcl(15, "Red-Green")
+col <- rev(col)
+```
+
+Set the colors for visualization.
+
+```{r}
+cpm_adults <- as.data.frame(cpm_adults)
+cpm_adults$gene <- rownames(cpm_adults)
+cpm_juveniles <- as.data.frame(cpm_juveniles)
+cpm_juveniles$gene <- rownames(cpm_juveniles)
+```
+
+## Pearson correlation analyses for the adults
+### Genes correlated with decreasing pH
+
+```{r results=F}
+res <- apply(m_ad,1L,cor.test,ri_0_1_2)
+
+pvalues <- sapply(res,'[[','p.value')
+pvalues <- as.data.frame(pvalues)
+table(pvalues$pvalues < 0.05)[2]/dim(m_ad)[1]*100
+pvalues$gene <- rownames(pvalues)
+
+cpm_adults_0_1_2 <- as.data.frame(merge(cpm_adults, pvalues, by = "gene", all = T))
+rownames(cpm_adults_0_1_2) <- cpm_adults_0_1_2$gene
+cpm_adults_0_1_2 <- cpm_adults_0_1_2[cpm_adults_0_1_2$pvalues < 0.05,]
+
+cpm_adults_0_1_2 <- cpm_adults_0_1_2[,2:7]
+cpm_adults_0_1_2 <- t(scale(t(cpm_adults_0_1_2)))
+```
+
+4.5% of the genes is correlated with decreasing pH.
+
+```{r heatmap_adult_0_1_2, ow = '90%', h = 3, w = 5}
+hm_ad_0_1_2 <- pheatmap(cpm_adults_0_1_2, col=col, show_rownames = F, cluster_cols = F, cellwidth = 20, cellheight = 0.2)
+```
+
+### Genes correlated with change in ambient environment
+
+```{r results=F}
+res <- apply(m_ad,1L,cor.test,ri_0_1_0)
+
+pvalues <- sapply(res,'[[','p.value')
+pvalues <- as.data.frame(pvalues)
+table(pvalues$pvalues < 0.05)[2]/dim(m_ad)[1]*100
+pvalues$gene <- rownames(pvalues)
+
+cpm_adults_0_1_0 <- as.data.frame(merge(cpm_adults, pvalues, by = "gene", all = T))
+rownames(cpm_adults_0_1_0) <- cpm_adults_0_1_0$gene
+cpm_adults_0_1_0 <- cpm_adults_0_1_0[cpm_adults_0_1_0$pvalues < 0.05,]
+
+cpm_adults_0_1_0 <- cpm_adults_0_1_0[,2:7]
+cpm_adults_0_1_0 <- t(scale(t(cpm_adults_0_1_0)))
+```
+
+8.6% of the genes is correlated with change in the ambient environment.
+
+```{r heatmap_adult_0_1_0, ow = '90%', h = 5, w = 5}
+hm_ad_0_1_0 <- pheatmap(cpm_adults_0_1_0, col=col, show_rownames = F, cluster_cols = F, cellwidth = 20, cellheight = 0.2)
+```
+
+### Genes with a strong (low/high) expression in the past condition
+
+```{r results=F}
+res <- apply(m_ad,1L,cor.test,ri_1_0_0)
+
+pvalues <- sapply(res,'[[','p.value')
+pvalues <- as.data.frame(pvalues)
+table(pvalues$pvalues < 0.05)[2]/dim(m_ad)[1]*100
+pvalues$gene <- rownames(pvalues)
+
+cpm_adults_1_0_0<- as.data.frame(merge(cpm_adults, pvalues, by = "gene", all = T))
+rownames(cpm_adults_1_0_0) <- cpm_adults_1_0_0$gene
+cpm_adults_1_0_0 <- cpm_adults_1_0_0[cpm_adults_1_0_0$pvalues < 0.05,]
+
+cpm_adults_1_0_0 <- cpm_adults_1_0_0[,2:7]
+cpm_adults_1_0_0 <- t(scale(t(cpm_adults_1_0_0)))
+```
+
+4.0% of the genes has a strong (low/high) expression in the past condition.
+
+```{r heatmap_adult_1_0_0, ow = '90%', h = 3, w = 5}
+hm_ad_1_0_0 <- pheatmap(cpm_adults_1_0_0, col=col, show_rownames = F, cluster_cols = F, cellwidth = 20, cellheight = 0.2)
+```
+
+### Genes with a strong (low/high) expression in the future condition
+
+```{r results=F}
+res <- apply(m_ad,1L,cor.test,ri_0_0_1)
+
+pvalues <- sapply(res,'[[','p.value')
+pvalues <- as.data.frame(pvalues)
+table(pvalues$pvalues < 0.05)[2]/dim(m_ad)[1]*100
+pvalues$gene <- rownames(pvalues)
+
+cpm_adults_0_0_1<- as.data.frame(merge(cpm_adults, pvalues, by = "gene", all = T))
+rownames(cpm_adults_0_0_1) <- cpm_adults_0_0_1$gene
+cpm_adults_0_0_1 <- cpm_adults_0_0_1[cpm_adults_0_0_1$pvalues < 0.05,]
+
+cpm_adults_0_0_1 <- cpm_adults_0_0_1[,2:7]
+cpm_adults_0_0_1 <- t(scale(t(cpm_adults_0_0_1)))
+```
+
+4.6% of the genes has a strong (low/high) expression in the future condition.
+
+```{r heatmap_adult_0_0_1, ow = '90%', h = 3, w = 5}
+hm_ad_0_0_1<- pheatmap(cpm_adults_0_0_1, col=col, show_rownames = F, cluster_cols = F, cellwidth = 20, cellheight = 0.2)
+```
+
+## Pearson correlation analyses for the juveniles
+### Genes correlated with decreasing pH
+
+```{r results=F}
+res <- apply(m_juv,1L,cor.test,ri_0_1_2)
+
+pvalues <- sapply(res,'[[','p.value')
+pvalues <- as.data.frame(pvalues)
+table(pvalues$pvalues < 0.05)[2]/dim(m_juv)[1]*100
+pvalues$gene <- rownames(pvalues)
+
+cpm_juv_0_1_2 <- as.data.frame(merge(cpm_juveniles, pvalues, by = "gene", all = T))
+rownames(cpm_juv_0_1_2) <- cpm_juv_0_1_2$gene
+cpm_juv_0_1_2 <- cpm_juv_0_1_2[cpm_juv_0_1_2$pvalues < 0.05,]
+
+cpm_juv_0_1_2 <- cpm_juv_0_1_2[,2:7]
+cpm_juv_0_1_2 <- t(scale(t(cpm_juv_0_1_2)))
+```
+
+7.7% of the genes is correlated with decreasing pH.
+
+```{r heatmap_juv_0_1_2, ow = '90%', h = 5, w = 5}
+hm_juv_0_1_2 <- pheatmap(cpm_juv_0_1_2, col=col, show_rownames = F, cluster_cols = F, cellwidth = 20, cellheight = 0.2)
+```
+
+### Genes correlated with change in ambient environment
+
+```{r results=F}
+res <- apply(m_juv,1L,cor.test,ri_0_1_0)
+
+pvalues <- sapply(res,'[[','p.value')
+pvalues <- as.data.frame(pvalues)
+table(pvalues$pvalues < 0.05)[2]/dim(m_juv)[1]*100
+pvalues$gene <- rownames(pvalues)
+
+cpm_juv_0_1_0 <- as.data.frame(merge(cpm_juveniles, pvalues, by = "gene", all = T))
+rownames(cpm_juv_0_1_0) <- cpm_juv_0_1_0$gene
+cpm_juv_0_1_0 <- cpm_juv_0_1_0[cpm_juv_0_1_0$pvalues < 0.05,]
+
+cpm_juv_0_1_0 <- cpm_juv_0_1_0[,2:7]
+cpm_juv_0_1_0 <- t(scale(t(cpm_juv_0_1_0)))
+```
+
+3.9% of the genes is correlated with change in the ambient environment.
+
+```{r heatmap_juv_0_1_0, ow = '90%', h = 3, w = 5}
+hm_juv_0_1_0 <- pheatmap(cpm_juv_0_1_0, col=col, show_rownames = F, cluster_cols = F, cellwidth = 20, cellheight = 0.2)
+```
+
+### Genes with a strong (low/high) expression in the past condition
+
+```{r results=F}
+res <- apply(m_juv,1L,cor.test,ri_1_0_0)
+
+pvalues <- sapply(res,'[[','p.value')
+pvalues <- as.data.frame(pvalues)
+table(pvalues$pvalues < 0.05)[2]/dim(m_juv)[1]*100
+pvalues$gene <- rownames(pvalues)
+
+cpm_juv_1_0_0 <- as.data.frame(merge(cpm_juveniles, pvalues, by = "gene", all = T))
+rownames(cpm_juv_1_0_0) <- cpm_juv_1_0_0$gene
+cpm_juv_1_0_0 <- cpm_juv_1_0_0[cpm_juv_1_0_0$pvalues < 0.05,]
+
+cpm_juv_1_0_0 <- cpm_juv_1_0_0[,2:7]
+cpm_juv_1_0_0 <- t(scale(t(cpm_juv_1_0_0)))
+```
+
+10.2% of the genes has a strong (low/high) expression in the past condition.
+
+```{r heatmap_juv_1_0_0, ow = '90%', h = 6, w = 5}
+hm_juv_1_0_0 <- pheatmap(cpm_juv_1_0_0, col=col, show_rownames = F, cluster_cols = F, cellwidth = 20, cellheight = 0.2)
+```
+
+### Genes with a strong (low/high) expression in the future condition
+
+```{r results=F}
+res <- apply(m_juv,1L,cor.test,ri_0_0_1)
+
+pvalues <- sapply(res,'[[','p.value')
+pvalues <- as.data.frame(pvalues)
+table(pvalues$pvalues < 0.05)[2]/dim(m_juv)[1]*100
+pvalues$gene <- rownames(pvalues)
+
+cpm_juv_0_0_1 <- as.data.frame(merge(cpm_juveniles, pvalues, by = "gene", all = T))
+rownames(cpm_juv_0_0_1) <- cpm_juv_0_0_1$gene
+cpm_juv_0_0_1 <- cpm_juv_0_0_1[cpm_juv_0_0_1$pvalues < 0.05,]
+
+cpm_juv_0_0_1 <- cpm_juv_0_0_1[,2:7]
+cpm_juv_0_0_1 <- t(scale(t(cpm_juv_0_0_1)))
+```
+
+4.1% of the genes has a strong (low/high) expression in the future condition.
+
+```{r heatmap_juv_0_0_1, ow = '90%', h = 3, w = 5}
+hm_juv_0_0_1 <- pheatmap(cpm_juv_0_0_1, col=col, show_rownames = F, cluster_cols = F, cellwidth = 20, cellheight = 0.2)
+```
+
+## Session information
+
+```{r}
+sessionInfo()
+```
+
