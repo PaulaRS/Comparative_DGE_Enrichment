@@ -12,8 +12,15 @@ This code accompanies the manuscript '_Transcriptomic responses of adult versus 
 
 ## Description
 
-This repository contains the Rmd-scripts ([`scripts/`](scripts/)) used to generate results ([`results/`](results/)). The aim of this project was to study the transcriptomic responses of adult and juvenile _Atlanta ariejansseni_ to past, present and future ocean chemistry.
+This repository contains the Rmd-scripts ([`scripts/`](scripts/)) used to generate the results within the manuscript. The aim of this project was to study the transcriptomic responses of adult and juvenile _Atlanta ariejansseni_ to past, present and future ocean chemistry.
 
 Reads used in this study were deposited at NCBI BioProject PRJNA742523. The Transcriptome Shotgun Assembly has been deposited at DDBJ/EMBL/GenBank under the accession GJHI00000000. Formatted input-files are available upon request.
 
 The included code was ran in R version 4.0.4.
+
+## File description
+([`scripts/`](scripts/)) 
+
+correlation_analysis: Pearson correlation analysis
+differential_gene_expression.Rmd: Differential gene expression analysis with DESeq2
+enrichment_analysis: Visualization of the GO enrichment analysis
