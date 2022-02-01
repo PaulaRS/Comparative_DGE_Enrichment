@@ -21,6 +21,6 @@ The included code was ran in R version 4.0.4.
 ## File description
 ([`scripts/`](scripts/)) 
 
-- [`correlation_analysis.Rmd`](scripts/correlation_analysis.Rmd): Pearson correlation analysis
 - [`differential_gene_expression.Rmd`](scripts/differential_gene_expression.Rmd): Differential gene expression analysis with DESeq2
+- [`correlation_analysis.Rmd`](scripts/correlation_analysis.Rmd): Pearson correlation analysis
 - [`enrichment_analysis.Rmd`](scripts/enrichment_analysis.Rmd): Visualization of the GO enrichment analysis
