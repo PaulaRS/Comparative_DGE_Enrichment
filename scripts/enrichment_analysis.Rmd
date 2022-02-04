@@ -2,18 +2,16 @@
 title: "GO enrichment analysis"
 author: "Mari-Lee Odendaal"
 date: "`r Sys.time()`"
-params: 
-      subdir_name: enrichment_analysis
 ---
 
 ## Load R-packages
 
 ```{r message=F}
-library(pheatmap);library(tidyverse);library(tidyverse);library(here);library(glue)
+library(pheatmap);library(tidyverse);library(here);library(glue)
 ```
 
 ```{r setup, include=F, message=F}
-subdir_name <- params$subdir_name
+subdir_name <- "enrichment_analysis"
 
 # set paths
 knitr::opts_knit$set(root.dir=".", aliases=c(h = "fig.height", w = "fig.width", ow = "out.width"))

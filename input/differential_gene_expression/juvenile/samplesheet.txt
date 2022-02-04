@@ -1,0 +1,11 @@
+File	Sample	CO2	Condition
+D1.tabular	D1	795	Future
+D2.tabular	D2	795	Future
+D3.tabular	D3	180	Past
+D4.tabular	D4	180	Past
+D5.tabular	D5	None	Present
+D6.tabular	D6	None	Present
+			
+			
+			
+			

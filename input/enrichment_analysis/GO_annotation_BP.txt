@@ -1,0 +1,14 @@
+GO	GO2	BP
+anatomical structure formation involved in morphogenesis	anatomical structure formation involved in morphogenesis (GO:0048646)	developmental process
+cell adhesion	cell adhesion (GO:0007155)	cellular component organization
+cell junction organization	cell junction organization (GO:0034330)	cellular component organization
+cellular protein-containing complex assembly	cellular protein-containing complex assembly (GO:0034622)	cellular component organization
+circulatory system process	circulatory system process (GO:0003013)	multicellular organismal process
+cytoskeleton organization	cytoskeleton organization (GO:0007010)	cellular component organization
+growth	growth (GO:0040007)	developmental process
+lipid metabolic process	lipid metabolic process (GO:0006629)	metabolic process
+locomotion	locomotion (GO:0040011)	locomotion
+multicellular organismal process	multicellular organismal process (GO:0032501)	multicellular organismal process
+peptide metabolic process	peptide metabolic process (GO:0006518)	metabolic process
+RNA metabolic process	RNA metabolic process (GO:0016070)	metabolic process
+DNA metabolic process	DNA metabolic process (GO:0006259)	metabolic process

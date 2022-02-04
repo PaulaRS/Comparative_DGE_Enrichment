@@ -1,0 +1,12 @@
+GO	GO2	MF
+cytoskeletal protein binding	cytoskeletal protein binding (GO:00080920)	binding
+kinase activity	kinase activity (GO:0016301)	enzymatic activity
+lipid binding	lipid binding (GO:0008289)	binding
+mRNA binding	mRNA binding (GO:0003729)	binding
+nucleotidyltransferase activity	nucleotidyltransferase activity (GO:0016779)	enzymatic activity
+rRNA binding	rRNA binding (GO:0019843)	binding
+structural constituent of ribosome	structural constituent of ribosome (GO:0003735)	structural molecule activity
+structural molecule activity	structural molecule activity (GO:0005198)	structural molecule activity
+transmembrane transporter activity	transmembrane transporter activity (GO:0022857)	transporter activity
+helicase activity	helicase activity (GO:0004386)	enzymatic activity
+RNA binding	RNA binding (GO:0003723)	binding

@@ -2,18 +2,16 @@
 title: "Differential gene expression analysis"
 author: "Mari-Lee Odendaal"
 date: "`r Sys.time()`"
-params: 
-      subdir_name: differential_gene_expression
 ---
 
 ## Load R-packages
 
 ```{r message=F}
-library(tximport);library(DESeq2);library(csaw);library(pheatmap);library(tidyverse);library(tidyverse);library(here);library(glue);library(DEFormats);library(colorspace)
+library(tximport);library(DESeq2);library(csaw);library(pheatmap);library(tidyverse);library(here);library(glue);library(DEFormats);library(colorspace);library(edgeR)
 ```
 
 ```{r setup, include=F, message=F}
-subdir_name <- params$subdir_name
+subdir_name <- "differential_gene_expression"
 
 # set paths
 knitr::opts_knit$set(root.dir=".", aliases=c(h = "fig.height", w = "fig.width", ow = "out.width"))

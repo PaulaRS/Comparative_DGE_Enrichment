@@ -2,8 +2,6 @@
 title: "Correlation Analysis"
 author: "Mari-Lee Odendaal"
 date: "`r Sys.time()`"
-params: 
-      subdir_name: correlation_analysis
 ---
 
 ## Load R-packages
@@ -13,7 +11,7 @@ library(here);library(glue);library(colorspace);library(pheatmap);library(string
 ```
 
 ```{r setup, include=F, message=F}
-subdir_name <- params$subdir_name
+subdir_name <- "correlation_analysis"
 
 # set paths
 knitr::opts_knit$set(root.dir=".", aliases=c(h = "fig.height", w = "fig.width", ow = "out.width"))
