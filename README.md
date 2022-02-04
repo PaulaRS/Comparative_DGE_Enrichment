@@ -6,7 +6,6 @@
 [cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
 
 _Author_: Mari-Lee Odendaal
-
 _Date_: 01-02-2022
 
 This code accompanies the manuscript '_Transcriptomic responses of adult versus juvenile atlantids to ocean acidification_'.
@@ -28,4 +27,4 @@ The included code was ran in R version 4.0.4.
 
 The .([`html`](results/html/)) -output of these scripts can be found in the ([`results`](results/)) -folder. Raw figures are stored in the ([`figures`](results/figures/))  folder.
 
-The ([`input`](input/)) folder contains R-objects and files used in each of the scripts.
+Input R-objects and files used in each of the scripts are stored in the ([`input`](input/)) folder.
