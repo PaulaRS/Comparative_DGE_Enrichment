@@ -7,8 +7,11 @@
 
 _Author_: Mari-Lee Odendaal
 _Date_: 01-02-2022
+_Updade_:03-06-2022
 
-This code accompanies the manuscript '_Transcriptomic responses of adult versus juvenile atlantids to ocean acidification_'.
+Suggested citation:
+
+This code accompanies the manuscript Ramos-Silva P, Odendaal M, Wall-Palmer D, Mekkes L, Peijnenburg KTCA. Transcriptomic Responses of Adult Versus Juvenile Atlantids to Ocean Acidification. Front Mar Sci 2022; 9: 1–12.
 
 ## Description
 
