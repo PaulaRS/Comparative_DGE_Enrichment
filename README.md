@@ -5,7 +5,6 @@
 [cc-by]: http://creativecommons.org/licenses/by/4.0/
 [cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
 
-_Author_: Mari-Lee Odendaal
 _Date_: 01-02-2022
 _Update_:03-06-2022
 
