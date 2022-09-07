@@ -10,7 +10,7 @@ _Update_:03-06-2022
 
 Suggested citation:
 
-This code accompanies the manuscript Ramos-Silva P, Odendaal M, Wall-Palmer D, Mekkes L, Peijnenburg KTCA. Transcriptomic Responses of Adult Versus Juvenile Atlantids to Ocean Acidification. Front Mar Sci 2022; 9: 1–12.
+This code accompanies the manuscript Ramos-Silva P, Odendaal M, Wall-Palmer D, Mekkes L, Peijnenburg KTCA. Transcriptomic Responses of Adult Versus Juvenile Atlantids to Ocean Acidification. Front Mar Sci 2022; 9: 1–12. https://doi.org/10.3389/fmars.2022.801458
 
 ## Description
 
